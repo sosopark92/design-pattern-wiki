@@ -358,14 +358,14 @@ _Last updated: YYYY-MM-DD_
 
 ## Study Patterns (Priority Order)
 
-Required first:
+<!-- Required first:
 
 1. Composite
 2. Observer
 3. Decorator
 4. Strategy
 
-Then by group discussion: 5. Factory Method 6. Adapter 7. Facade 8. Command 9. Singleton 10. State
+Then by group discussion: 5. Factory Method 6. Adapter 7. Facade 8. Command 9. Singleton 10. State -->
 
 ---
 
