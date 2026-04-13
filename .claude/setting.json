@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run python hooks/session-start.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run python hooks/session-end.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Write(daily/**)",
+      "Write(knowledge/**)",
+      "Write(raw/snippets/**)"
+    ],
+    "deny": [
+      "Write(CLAUDE.md)",
+      "Write(.claude/**)",
+      "Write(hooks/**)"
+    ]
+  }
+}
