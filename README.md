@@ -111,15 +111,7 @@ Lint the wiki.
 This finds broken links, orphan pages, and missing concept pages.
 
 ## Study patterns
-
-Required (in order):
-
-1. Composite
-2. Observer
-3. Decorator
-4. Strategy
-
-To be decided by the group: Factory Method, Adapter, Facade, Command, Singleton, State.
+1. Observer
 
 ## Obsidian (optional)
 
