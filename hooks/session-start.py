@@ -26,7 +26,7 @@ def read_index_summary():
     index_path = os.path.join(KNOWLEDGE, "index.md")
     if not os.path.exists(index_path):
         return "(index not yet created)"
-    with open(index_path, "r") as f:
+    with open(index_path, "r", encoding="utf-8") as f:
         content = f.read()
     # Return first 2000 chars — enough for Claude to orient
     return content[:2000]
