@@ -38,6 +38,12 @@ opencode Bus는 프로세스 간 이벤트 통신을 위한 발행-구독 기능
 
 ### **2계층 디스패치** — 성능 최적화
 
+```
+State
+├── wildcard: PubSub<Payload>       ← 모든 이벤트 수신
+└── typed: Map<string, PubSub>      ← 특정 타입 이벤트만 수신
+```
+
 - **와일드카드 채널** (`s.wildcard`): 모든 이벤트를 수신하는 PubSub
 - **타입별 채널** (`s.typed`): 특정 구독에 대한 이벤트 타입별 PubSub
 - 구독자는 모든 이벤트 또는 특정 타입만 수신 가능
@@ -45,10 +51,44 @@ opencode Bus는 프로세스 간 이벤트 통신을 위한 발행-구독 기능
 
 ### **리소스 관리** (Effect 패턴)
 
+```ts
+yield* Effect.addFinalizer(() =>
+  Effect.gen(function* () {
+    yield* PubSub.publish(wildcard, { type: InstanceDisposed.type, ... })
+    yield* PubSub.shutdown(wildcard)
+    for (const ps of typed.values()) {
+      yield* PubSub.shutdown(ps)
+    }
+  }),
+)
+```
+
+인스턴스 종료 시 `InstanceDisposed` 이벤트를 **먼저 발행한 뒤** 모든 PubSub을 shutdown합니다. 구독자가 종료 신호를 받을 수 있도록 순서를 보장하는 부분.
+
 - `InstanceState`를 사용하여 생명주기 관리
 - `Effect.addFinalizer()` 보장 정리: 종료 전 `InstanceDisposed` 이벤트 발행
 - 모든 PubSub 인스턴스가 폐기 시 적절히 종료
 - `Scope.make()`가 구독 취소 시 구독 리소스 해제 보장
+
+**구독 방식 두 가지**
+
+| 방식          | 함수                                          | 반환                         | 사용 상황           |
+| ----------- | ------------------------------------------- | -------------------------- | --------------- |
+| Stream 방식   | `subscribe`, `subscribeAll`                 | `Stream<Payload>`          | Effect 파이프라인 내부 |
+| Callback 방식 | `subscribeCallback`, `subscribeAllCallback` | `() => void` (unsubscribe) | 외부 JS/비동기 코드    |
+
+**GlobalBus 연동**
+
+```ts
+GlobalBus.emit("event", {
+  directory: dir,
+  project: context.project.id,
+  workspace,
+  payload,
+})
+```
+
+로컬 PubSub 발행 후 GlobalBus에도 이벤트를 전달합니다. 멀티 인스턴스 환경에서 인스턴스 간 통신을 위한 구조로 보입니다.
 
 ## 강점
 

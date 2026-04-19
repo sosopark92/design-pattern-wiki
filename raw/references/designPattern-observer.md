@@ -14,29 +14,29 @@ Observer Pattern(관찰자 패턴)은 객체 간의 **일대다(one-to-many) 의
 
 예를 들어:
 ```python
-class Subject:
+class Subject: #observer list 관리 attach()/notify()
     def __init__(self):
-        self.observers = []
-    def attach(self, observer): self.observers.append(observer)
-    def notify(self): 
+        self.observers = [] #observer 리스트
+    def attach(self, observer): self.observers.append(observer) #등록
+    def notify(self): #알림
         for observer in self.observers:
-            observer.update(self)
+            observer.update(self) 
 
-class Observer:
-    def update(self, subject): pass
+class Observer: #interface 역할 update()정의
+    def update(self, subject): pass #알림이 오면 update
 
-class ConcreteSubject(Subject):
+class ConcreteSubject(Subject): 
     def __init__(self): 
         super().__init__()
-        self.state = 0
-    def set_state(self, state): 
+        self.state = 0 #state=0
+    def set_state(self, state): # 상태 변경 시
         self.state = state
-        self.notify()  # 상태 변경 시 자동 알림
+        self.notify()  # 자동 알림
 
 class ConcreteObserver(Observer):
     def __init__(self, name): self.name = name
-    def update(self, subject): 
-        print(f"{self.name}: 상태가 {subject.state}로 변경됨")
+    def update(self, subject): # update(subject) 를 받고
+        print(f"{self.name}: 상태가 {subject.state}로 변경됨") #state 출력
 
 # 클라이언트는 Subject와 Observer를 구분하지 않음
 stock = ConcreteSubject()
@@ -49,6 +49,8 @@ stock.set_state(100)     # 투자자A: 상태가 100으로 변경됨
                          # 투자자B: 상태가 100으로 변경됨
 ```
 → `ConcreteSubject`와 `ConcreteObserver`는 모두 각각 `Subject`, `Observer` 인터페이스를 구현해서 **발행-구독 메커니즘**을 통해 느슨하게 결합된다.
+
+Subject와 Observer는 서로의 구체적인 구현을 모름. Subject는 "옵저버 목록에 있는 애들한테 `update()` 쏘면 돼" 정도만 알고, 누가 등록됐는지는 상관 안함. 그래서 나중에 새 투자자(Observer)를 추가해도 Subject 코드를 전혀 안 건드려도 됨.
 
 ## 단일 책임 원칙 / 개방-폐쇄 원칙
 

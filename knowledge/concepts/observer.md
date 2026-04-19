@@ -6,7 +6,7 @@ sources:
   - "https://refactoring.guru/design-patterns/observer"
   - "knowledge/reviews/opencode-bus"
 created: 2026-04-14
-updated: 2026-04-14
+updated: 2026-04-19
 ---
 
 # Observer
@@ -82,6 +82,20 @@ Four key participants:
 - Performance overhead if there are many observers
 - Difficult to trace notification order and dependencies between observers
 
+## Observer delivery modes
+
+Two variants exist, both seen in [[knowledge/reviews/opencode-bus]]:
+
+- **Push**: the Subject calls a callback on each observer — bus drives delivery. Simple but observer errors can affect the dispatch loop.
+- **Pull**: the Subject exposes a `Stream`; the observer pulls events at its own pace. Natural for async pipelines; backpressure is handled by stream infrastructure.
+
+## Event Bus variant
+
+When the Subject role is extracted into a shared singleton (the Bus), Observer becomes **Event Bus**. Producers call `publish(type, payload)` without holding any observer list. Consumers `subscribe(type)` without knowing any producer. Both sides only know the event type contract. See [[knowledge/connections/observer-event-bus]] for the full structural comparison.
+
+> **Updated 2026-04-19:** Added Push vs Pull delivery modes and Event Bus variant, from opencode bus analysis.
+
 ## Sources
 
 - https://refactoring.guru/design-patterns/observer
+- [[daily/2026-04-19.md]] — Push/Pull variants, Event Bus as Observer specialization, two-tier dispatch
