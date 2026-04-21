@@ -32,7 +32,7 @@ export function define<Type, Properties>(type, properties) {
 `define()`은 이벤트 타입을 문자열 키와 Zod 스키마 쌍으로 등록한다. 전역 `registry` Map은 버스에 존재할 수 있는 모든 이벤트의 공식 카탈로그다. `payloads()`는 이 카탈로그를 Zod의 discriminated union으로 변환해 검증에 사용한다.
 
 **패턴: Registry**
-registry는 "어떤 이벤트가 존재하는가?"를 타입 시스템 수준에서 답한다. 이 레이어가 없으면 발행자가 임의의 문자열 키와 미검증 payload를 내보낼 수 있다 — 이벤트 버스의 고전적 유지보수 문제.
+registry는 "어떤 이벤트가 존재하는가?"**를 타입 시스템 수준에서 답한다. 이 레이어가 없으면 발행자가 임의의 문자열 키와 미검증 payload를 내보낼 수 있다 — 이벤트 버스의 고전적 유지보수 문제.
 
 ---
 
