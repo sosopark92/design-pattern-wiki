@@ -1,5 +1,23 @@
 # Knowledge Build Log
 
+## [2026-04-21T01:00] translate | Korean versions of rebuilt observer files
+
+- Articles created: [[knowledge/concepts/observer-ko]], [[knowledge/reviews/opencode-bus-ko]], [[knowledge/connections/observer-event-bus-ko]]
+- Full Korean translation of the rebuilt English articles (3-layer architecture, 2-tier dispatch, Push/Pull)
+
+## [2026-04-21T00:00] rebuild | observer knowledge base
+
+- Deleted: observer.md, observer-ko.md, opencode-bus.md, opencode-bus-ko.md, observer-event-bus.md, observer-event-bus-ko.md
+- Rebuilt from fresh analysis of raw/snippets/opencode/ (3 files) + raw/references/designPattern-eventbus.md
+- Articles created:
+  - [[knowledge/concepts/observer]] — tightened; removed redundancy; added three-layer architecture reference
+  - [[knowledge/reviews/opencode-bus]] — expanded to cover all 3 source files (bus-events.ts, global.ts, src-bus-index.ts); per-file pattern breakdown
+  - [[knowledge/connections/observer-event-bus]] — added three-layer architecture section; updated evidence line numbers
+- Key additions vs previous version:
+  - bus-events.ts documented as Registry / Contract layer
+  - global.ts documented as process-level propagation escape hatch (why it exists separately)
+  - Full event flow diagram (define → publish → typed/wildcard/GlobalBus)
+
 ## [2026-04-14T00:00] create | composite concept
 
 - Articles created: [[knowledge/concepts/composite]]

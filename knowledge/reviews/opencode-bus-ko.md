@@ -1,115 +1,128 @@
 ---
-title: "리뷰: opencode-bus"
+title: "리뷰: opencode-bus (한국어)"
 source_type: github
 language: TypeScript
-reviewed: 2026-04-14
-source: https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/bus/index.ts
-language_content: ko
+reviewed: 2026-04-21
+source: https://github.com/anomalyco/opencode/tree/dev/packages/opencode/src/bus
+snippets:
+  - raw/snippets/opencode/bus-events.ts
+  - raw/snippets/opencode/global.ts
+  - raw/snippets/opencode/src-bus-index.ts
 ---
 
 # 리뷰: opencode-bus
 
 ## 이 코드가 하는 일
 
-opencode Bus는 프로세스 간 이벤트 통신을 위한 발행-구독 기능을 제공하는 타입 안전하고 Effect 기반의 이벤트 버스 구현입니다. 특정 이벤트 타입에 대한 타입별 구독과 모든 이벤트에 대한 와일드카드 구독을 모두 지원하며, 효율성을 위해 2계층 디스패치 메커니즘을 사용합니다.
+세 파일이 함께 opencode의 컴포넌트 간 통신을 위한 타입-세이프 이벤트 버스를 구현한다. 세 파일은 독립적이지 않다 — 각각 이벤트 계약 정의, 로컬 타입 디스패치, process-level 전파라는 별도의 책임을 담당한다.
+
+## 파일별 분석
+
+### `bus-events.ts` — 이벤트 계약 레이어
+
+```ts
+const registry = new Map<string, Definition>()
+
+export function define<Type, Properties>(type, properties) {
+  registry.set(type, result)
+  return result
+}
+```
+
+`define()`은 이벤트 타입을 문자열 키와 Zod 스키마 쌍으로 등록한다. 전역 `registry` Map은 버스에 존재할 수 있는 모든 이벤트의 공식 카탈로그다. `payloads()`는 이 카탈로그를 Zod의 discriminated union으로 변환해 검증에 사용한다.
+
+**패턴: Registry**
+registry는 "어떤 이벤트가 존재하는가?"를 타입 시스템 수준에서 답한다. 이 레이어가 없으면 발행자가 임의의 문자열 키와 미검증 payload를 내보낼 수 있다 — 이벤트 버스의 고전적 유지보수 문제.
+
+---
+
+### `global.ts` — process-level 전파 레이어
+
+```ts
+export const GlobalBus = new EventEmitter<{ event: [GlobalEvent] }>()
+```
+
+Effect 의존성 없는 순수 Node.js `EventEmitter`. `GlobalEvent`는 `directory`, `project`, `workspace`, `payload`를 담아 인스턴스 경계를 넘어 라우팅할 수 있는 충분한 컨텍스트를 제공한다.
+
+**패턴: Observer (최소 형태)**
+이 파일이 교과서의 옵저버 패턴과 가장 유사하다: 이벤트 타입 하나, 여러 리스너, `GlobalEvent` 형태 외에는 타입 안전성 없음. 단순함은 의도적이다 — 이 파일은 탈출구이지 핵심 시스템이 아니다.
+
+**왜 따로 존재하는가:** `src-bus-index.ts`의 `Bus.Service`는 인스턴스(열린 디렉토리) 단위로 스코프된다. 여러 프로젝트를 동시에 열면 `Bus.Service` 인스턴스도 여러 개 생긴다. `GlobalBus`는 이 경계를 넘는 단일 싱글톤이다. 로컬에서 발행된 모든 이벤트는 이 버스로도 전달된다.
+
+---
+
+### `src-bus-index.ts` — 로컬 디스패치 레이어
+
+핵심 구현체. 일반 콜백 대신 Effect-TS `PubSub`을 사용한다.
+
+**패턴: Event Bus (Subject를 공유한 Observer)**
+
+```ts
+type State = {
+  wildcard: PubSub<Payload>
+  typed: Map<string, PubSub<Payload>>
+}
+```
+
+2-tier 디스패치: 이벤트 타입별 전용 PubSub(`typed`, 첫 구독 시 lazily 생성)과 wildcard 구독자를 위한 공유 PubSub. `publish()`는 항상 두 채널에 모두 쓴다:
+
+```ts
+if (ps) yield* PubSub.publish(ps, payload)  // typed 채널
+yield* PubSub.publish(s.wildcard, payload)   // wildcard 채널
+GlobalBus.emit("event", { ... })             // process-level 전파
+```
+
+**패턴: 2-tier 디스패치 (성능 최적화)**
+이 분리 없이는 publish마다 타입과 무관하게 전체 구독자를 순회해야 한다. 분리하면 타입별 디스패치는 O(해당 타입 구독자 수). Wildcard 구독자는 타입 채널 수와 무관하게 단일 PubSub publish만 받는다.
+
+**패턴: Registry (`bus-events.ts` 사용)**
+파일 상단에서 `BusEvent.define(...)`으로 `Bus.InstanceDisposed`를 정의한다 — 계약 레이어가 실제로 어떻게 소비되는지 보여주는 예시.
+
+**패턴: Effect lifecycle / 리소스 관리**
+`Effect.addFinalizer()`가 종료 전 `InstanceDisposed` 이벤트를 발행하고, 모든 PubSub을 닫는 것을 보장한다. 구독 정리는 `Scope.make()`를 사용 — 반환된 unsubscribe 함수가 `Scope.close()`를 호출한다.
+
+**두 가지 구독 인터페이스:**
+- `subscribe(def)` → `Stream<Payload>` — Pull 방식: 소비자가 자신의 속도로 이벤트를 소비, 백프레셔는 스트림 인프라가 처리
+- `subscribeCallback(def, callback)` → `Effect<() => void>` — Push 방식: 버스가 콜백을 호출; `Effect.tryPromise`로 감싸 cascade 실패 방지
 
 ## 식별된 패턴
 
-### **[[knowledge/concepts/observer-ko]]** — 핵심 패턴
-
-- **주제:** `Bus.Service`가 상태 (PubSub 인스턴스) 유지
-- **옵저버:** 콜백과 스트림 소비자가 타입별 또는 와일드카드 이벤트 구독
-- **알림:** `publish()`가 모든 구독한 옵저버에 이벤트 디스패치
-- 양방향: 스트림 기반 (`subscribe()`)과 콜백 기반 (`subscribeCallback()`) 옵저버 스타일 모두 지원
-
-### **이벤트 버스** — 상위 수준 패턴
-
-- 모든 이벤트 처리를 단일 서비스에 중앙집중화
-- 발행자 푸시 (`publish()`)와 소비자 풀 (Stream) 메커니즘 모두 지원
-- 이벤트 발행자와 소비자 완전 분리
-- 동기식 (콜백)과 비동기식 (스트리밍) 소비 모드 모두 제공
-
-### **레지스트리 패턴** — 이벤트 타입 관리
-
-- `BusEvent.define()`이 이벤트 타입을 전역으로 등록
-- 각 정의된 이벤트는 문자열 타입과 Zod로 검증된 프로퍼티 페이로드 가짐
-- `BusEvent.payloads()`가 등록된 모든 이벤트 타입의 판별 합집합 구성
-- 정의 시점에 이벤트 데이터에 대한 타입 안전 검증
-
-### **2계층 디스패치** — 성능 최적화
-
-```
-State
-├── wildcard: PubSub<Payload>       ← 모든 이벤트 수신
-└── typed: Map<string, PubSub>      ← 특정 타입 이벤트만 수신
-```
-
-- **와일드카드 채널** (`s.wildcard`): 모든 이벤트를 수신하는 PubSub
-- **타입별 채널** (`s.typed`): 특정 구독에 대한 이벤트 타입별 PubSub
-- 구독자는 모든 이벤트 또는 특정 타입만 수신 가능
-- 오버헤드 감소: 와일드카드 구독자는 개별 타입 채널이 불필요
-
-### **리소스 관리** (Effect 패턴)
-
-```ts
-yield* Effect.addFinalizer(() =>
-  Effect.gen(function* () {
-    yield* PubSub.publish(wildcard, { type: InstanceDisposed.type, ... })
-    yield* PubSub.shutdown(wildcard)
-    for (const ps of typed.values()) {
-      yield* PubSub.shutdown(ps)
-    }
-  }),
-)
-```
-
-인스턴스 종료 시 `InstanceDisposed` 이벤트를 **먼저 발행한 뒤** 모든 PubSub을 shutdown합니다. 구독자가 종료 신호를 받을 수 있도록 순서를 보장하는 부분.
-
-- `InstanceState`를 사용하여 생명주기 관리
-- `Effect.addFinalizer()` 보장 정리: 종료 전 `InstanceDisposed` 이벤트 발행
-- 모든 PubSub 인스턴스가 폐기 시 적절히 종료
-- `Scope.make()`가 구독 취소 시 구독 리소스 해제 보장
-
-**구독 방식 두 가지**
-
-| 방식          | 함수                                          | 반환                         | 사용 상황           |
-| ----------- | ------------------------------------------- | -------------------------- | --------------- |
-| Stream 방식   | `subscribe`, `subscribeAll`                 | `Stream<Payload>`          | Effect 파이프라인 내부 |
-| Callback 방식 | `subscribeCallback`, `subscribeAllCallback` | `() => void` (unsubscribe) | 외부 JS/비동기 코드    |
-
-**GlobalBus 연동**
-
-```ts
-GlobalBus.emit("event", {
-  directory: dir,
-  project: context.project.id,
-  workspace,
-  payload,
-})
-```
-
-로컬 PubSub 발행 후 GlobalBus에도 이벤트를 전달합니다. 멀티 인스턴스 환경에서 인스턴스 간 통신을 위한 구조로 보입니다.
+| 패턴 | 파일 | 위치 |
+| ---- | ---- | ---- |
+| **[[knowledge/concepts/observer]]** | 세 파일 모두 | 핵심 구독 메커니즘 |
+| **Event Bus** | `src-bus-index.ts`, `global.ts` | Subject를 싱글톤으로 추출 |
+| **Registry** | `bus-events.ts` | `registry` Map + `define()` |
+| **2-tier Dispatch** | `src-bus-index.ts:27-28` | `wildcard` + `typed` PubSub 분리 |
+| **Effect lifecycle** | `src-bus-index.ts:56-70` | `InstanceState`, `addFinalizer`, `Scope` |
 
 ## 강점
 
-- **타입 안전:** Zod 스키마가 컴파일 타임과 런타임에 이벤트 페이로드 타입 강제
-- **유연한 구독:** 다양한 사용 사례에 대한 스트림 및 콜백 인터페이스
-- **효율성:** 2계층 디스패치가 와일드카드 구독자를 위한 불필요한 팬아웃 방지
-- **적절한 정리:** 파이널라이저는 리소스 누수 방지; 명시적 구독 취소 지원
-- **전역 통합:** `GlobalBus.emit()`이 로컬 인스턴스 외부로 이벤트 확장
-- **로깅:** 구독/발행 흐름 디버깅을 위한 내장 로깅
-- **에러 처리:** 구독자 콜백이 `Effect.tryPromise`로 래핑되어 캐스케이드 실패 방지
+- **종단간 타입 안전**: `BusEvent.define()` + Zod로 payload 형식이 맞지 않으면 컴파일 시점에 실패
+- **두 가지 전달 방식**: Stream(Pull)과 콜백(Push)이 서로 다른 소비자 요구를 인프라 중복 없이 커버
+- **2-tier 디스패치**: 타입 이벤트에 대한 O(전체 구독자) fan-out 방지
+- **정확한 정리**: 모든 구독 리소스에 명시적 finalizer 경로 존재
+- **GlobalBus 브리지**: 메인 버스를 process 스코프에 결합하지 않고 process-level 전파 가능
+- **에러 격리**: 콜백 구독자를 `Effect.tryPromise`로 감싸 한 구독자의 실패가 다른 구독자에 영향 없음
 
-## 제안
+## 안티패턴 / 냄새
 
-- **구독 취소 추적 추가:** 구독자가 반환된 정리 함수 호출을 잊는 경우 경고 고려
-- **백프레셔 처리:** 대량 이벤트가 느린 구독자를 압도할 수 있음; 버퍼링/드롭 정책 고려
-- **이벤트 순서 보장 문서화:** 단일 타입 채널 내에서 이벤트 순서가 보장되는지 문서화
-- **타입 안전 와일드카드 구독:** 와일드카드 채널이 `any` 타입 사용; 모든 이벤트가 확장하는 기본 이벤트 타입 생성 고려
-- **구독자 에러 복구:** 현재 에러 처리는 로깅 및 무시; 일시적 오류에 대한 재시도 전략 고려
+발견되지 않음. 주의할 부분 하나:
 
-## 평가
+- `subscribeAll` / `subscribeAllCallback`이 wildcard payload에 `any`를 사용한다. 의도적 트레이드오프("전체 이벤트"라는 의미에서 필터링 없음)이지만, 호출자는 payload 쪽 타입 안전성을 잃는다.
 
-**이것은 잘 설계된 코드입니다.** opencode Bus는 성숙한 패턴 사용을 보여줍니다: 옵저버 (핵심 구독 메커니즘)와 이벤트 버스 (상위 수준 추상화), 레지스트리 (메타데이터 관리), 적절한 리소스 관리 (Effect 생명주기)를 결합합니다. 2계층 디스패치는 많은 이벤트 버스가 부족한 스마트한 최적화입니다. Zod를 통한 파이프라인 전체의 타입 안전성은 런타임 오류의 전체 클래스를 방지합니다. 구현은 리소스 관리에 대한 Effect-TS 원칙을 존중하고, 이중 인터페이스 (스트림 + 콜백)는 다양한 소비자 요구에 유연성을 제공합니다.
+## 개선 제안
 
-개선의 주요 영역은 이벤트 순서 보장과 대량 시나리오에 대한 백프레셔 처리 지침에 대한 문서화입니다. 코드는 프로덕션 준비 상태이며 현대적인 TypeScript/Effect 컨텍스트에서 옵저버 + 이벤트 버스 패턴의 좋은 참조 구현이 됩니다.
+- 이벤트 순서 보장에 대한 문서화: 단일 typed 채널 내에서 이벤트가 발행 순서대로 전달되는가? (PubSub 의미론상 yes이겠지만 명시되지 않음)
+- wildcard payload에 `any` 대신 타입이 있는 기본 인터페이스 고려
+- `unbounded` PubSub의 대용량 이벤트 시 백프레셔 처리 가이드라인 추가
+
+## 진단
+
+**잘 설계된 프로덕션 수준의 코드다.** 세 파일의 분리는 의도적이고 명확하다: 계약 정의, 로컬 디스패치, 글로벌 전파가 각각 단일 책임을 갖는다. 2-tier 디스패치는 대부분의 이벤트 버스 구현이 생략하는 성숙한 최적화다. Zod를 통한 파이프라인 전체의 타입 안전성은 런타임 에러의 전체 범주를 방지한다. Stream + 콜백의 이중 인터페이스는 서로 다른 소비자 맥락에 실질적인 유연성을 제공한다.
+
+주된 공백은 문서화다 — 이벤트 순서 보장과 `unbounded` PubSub의 백프레셔 동작이 코드 어디에도 명시되지 않는다.
+
+## 연결 문서
+
+- [[knowledge/concepts/observer]] — 세 파일 모두의 기반 메커니즘
+- [[knowledge/connections/observer-event-bus]] — 구조적 비교 전체; 3-레이어 아키텍처
