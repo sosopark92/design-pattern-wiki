@@ -10,7 +10,7 @@ Event Bus: Acts as a broker, router, or mediator.
 
 EventBus = Publisher와 Subscriber 간 이벤트 교환을 하게 하는 통신 중재자 역할  
 Subscriber = 이벤트 버스에서 특정 이벤트를 수신, 필요한 특정 이벤트를 구독(subscribe)  
-             이벤트가 버스에 게시 되면 구독자에게 알림이 전송되어 특정 작업 수행  
+&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; 이벤트가 버스에 게시 되면 구독자에게 알림이 전송되어 특정 작업 수행  
 Publisher = 이벤트를 생성, 구독자가 누구인지 알 필요 없이 이벤트 버스에 이벤트를 게시  
   
 
