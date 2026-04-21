@@ -35,6 +35,38 @@ Event Bus: 중앙안내센터
 
 이벤트 버스가 없다면 쇼핑몰의 **주문 시스템 Publisher** 은 모든 부서에 알림을 보내게 된다.
 
+```python
+# 이벤트 버스 없을 때
+class OrderService:  # Publisher (주문팀)
+    def complete_order(self, order):
+
+        # 모든 부서를 직접 알아야 함
+        InventoryService().decrease_stock(order)   # 재고팀
+        PaymentService().process_payment(order)      # 결제팀
+        DeliveryService().prepare_delivery(order)  # 배송팀
+        MarketingService().give_points(order)      # 마케팅팀
+        NotificationService().send_sms(order)      # 알림팀
+
+주문팀이 다른 모든 부서를 알고 있어야 한다
+        ↓
+부서가 바뀔 때마다 주문팀 코드도 바뀐다
+        ↓
+팀들이 서로 강하게 묶여있다 (강한 결합)
+
+# 이벤트 버스가 있으면
+pythonclass OrderService:
+    def complete_order(self, order):
+        event_bus.publish("주문완료", order)  # 이게 끝
+        # 누가 듣는지 알 필요 없음
+
+주문팀 → 이벤트버스 → 재고팀
+                    → 결제팀
+                    → 배송팀
+                    → 마케팅팀 (없어지면 그냥 구독 해제)
+                    → 알림팀   (새로 생기면 그냥 구독 추가)
+
+```
+
 그러나 이벤트 버스가 있으면 주문 시스템은 "주문이 완료되었다" 이 사실만 **이벤트 버스 Event Bus**에 알리면 된다.
 
 이벤트 버스는 누가 **주문완료 이벤트 Event**를 듣고 있는지 알고 있고, 그 이벤트가 올라오면 등록된 시스템들에게 그 사실을 전달한다.
