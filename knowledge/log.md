@@ -1,5 +1,22 @@
 # Knowledge Build Log
 
+## [2026-04-22T01:00] update | knowledge/concepts/event-bus.md + event-bus-ko.md
+
+- Source: https://www.geeksforgeeks.org/system-design/event-driven-architecture-system-design/
+- Added: EDA context (Event Bus as architectural pattern, not just design pattern)
+- Added: 5-component EDA model (Event Source, Event, Event Broker, Publisher, Subscriber)
+- Added: Supporting roles (Event Handler, Dispatcher, Listener)
+- Added: Real-world application domains (financial, e-commerce, telecom, gaming, flight booking)
+- Added: EDA-specific cons (async debugging difficulty, event ordering, latency, eventual consistency)
+- Added: "When NOT to use" — strong consistency requirement
+- Updated: index.md entries for both files
+
+## [2026-04-22T00:00] practice | pseudo/2026-04-22-event-bus.md
+
+- Problem created: [[pseudo/2026-04-22-event-bus]]
+- Pattern: event-bus
+- Scenario: 항공 예매 시스템 — 좌석 예약 확정 시 결제·마일리지·수하물·탑승권 연동
+
 ## [2026-04-21T01:00] translate | Korean versions of rebuilt observer files
 
 - Articles created: [[knowledge/concepts/observer-ko]], [[knowledge/reviews/opencode-bus-ko]], [[knowledge/connections/observer-event-bus-ko]]

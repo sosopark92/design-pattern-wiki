@@ -1,14 +1,14 @@
 # Knowledge Index
 
-_Last updated: 2026-04-21_
+_Last updated: 2026-04-22_
 
 ## Concepts
 
-| Article                               | Summary                                                             | Updated    |
-| ------------------------------------- | ------------------------------------------------------------------- | ---------- |
-| [[knowledge/concepts/composite]]      | Tree structures where leaf and branch objects share a common interface | 2026-04-14 |
-| [[knowledge/concepts/observer]]       | One-to-many dependency; Push/Pull delivery modes; Event Bus variant | 2026-04-21 |
-| [[knowledge/concepts/observer-ko]]    | 옵저버 패턴: 1:N 의존성, Push/Pull 전달 방식, Event Bus 변형       | 2026-04-21 |
+| Article                               | Summary                                                                                          | Updated    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------- |
+| [[knowledge/concepts/composite]]      | Tree structures where leaf and branch objects share a common interface                           | 2026-04-14 |
+| [[knowledge/concepts/event-bus]]      | Observer → Event Bus → EDA; 5-component model; Push/Pull; async challenges; real-world cases     | 2026-04-22 |
+| [[knowledge/concepts/event-bus-ko]]   | 옵저버→이벤트버스→EDA; 5가지 구성요소; Push/Pull; 비동기 디버깅 과제; 실제 적용 사례            | 2026-04-22 |
 
 ## Reviews
 
