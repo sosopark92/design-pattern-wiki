@@ -28,3 +28,8 @@ _Last updated: 2026-04-21_
 
 | Article | Summary |
 | ------- | ------- |
+
+## Practices
+
+| Article | Pattern | Status | Date |
+| ------- | ------- | ------ | ---- |

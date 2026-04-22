@@ -15,9 +15,9 @@ Goal: build intuition for reading and diagnosing code structure across any langu
 ## The Compiler Analogy
 
 ```
-daily/        = session logs     (what happened in each study session)
-LLM           = compiler         (extracts and organizes knowledge)
-knowledge/    = knowledge base   (structured, queryable, LLM-owned)
+pseudo/       = practice problems  (user writes pseudo code, LLM reviews)
+LLM           = compiler           (generates problems, reviews, organizes knowledge)
+knowledge/    = knowledge base     (structured, queryable, LLM-owned)
 ```
 
 ---
@@ -33,8 +33,8 @@ design-pattern-wiki/
 │   ├── session-start.py
 │   └── session-end.py
 ├── pyproject.toml
-├── daily/                           ← session logs (append-only, never edit after the fact)
-│   └── YYYY-MM-DD.md
+├── pseudo/                          ← practice problems (one file per pattern per session)
+│   └── YYYY-MM-DD-<pattern-name>.md
 ├── raw/
 │   ├── snippets/                    ← code files to analyze (immutable)
 │   └── references/                 ← articles, refactoring.guru pages (immutable)
@@ -59,7 +59,7 @@ title: "Pattern Name"
 aliases: []
 tags: [creational|structural|behavioral]
 sources:
-  - "daily/YYYY-MM-DD.md"
+  - "pseudo/YYYY-MM-DD-<pattern>.md"
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -96,7 +96,7 @@ Key participants and their relationships.
 
 ## Sources
 
-- [[daily/YYYY-MM-DD.md]] — what was learned that day
+- [[pseudo/YYYY-MM-DD-<pattern>]] — practice session where this was applied
 ```
 
 ---
@@ -150,7 +150,7 @@ connects:
   - "knowledge/concepts/pattern-a"
   - "knowledge/concepts/pattern-b"
 sources:
-  - "daily/YYYY-MM-DD.md"
+  - "pseudo/YYYY-MM-DD-<pattern>.md"
 created: YYYY-MM-DD
 ---
 
@@ -178,7 +178,7 @@ Specific examples from reviews or sessions.
 title: "Antipattern: Name"
 related_pattern: "knowledge/concepts/better-alternative"
 sources:
-  - "daily/YYYY-MM-DD.md"
+  - "pseudo/YYYY-MM-DD-<pattern>.md"
 created: YYYY-MM-DD
 ---
 
@@ -203,54 +203,102 @@ Which pattern to apply and how.
 
 ---
 
-## Daily Log Format
+## Pseudo Code Practice Format
 
-`daily/YYYY-MM-DD.md` — append-only. Never edit a past entry.
+`pseudo/YYYY-MM-DD-<pattern-name>.md`
 
 ```markdown
-# Daily Log: YYYY-MM-DD
+---
+date: YYYYMMDD
+pattern: <pattern-name>
+status: problem | in-progress | reviewed
+---
 
-## Session (HH:MM) - Topic
+# 문제
 
-**Source analyzed:** https://github.com/... or raw/snippets/filename
+**시나리오:**
+[실전 사례 서술 — 2~4문장. 어떤 시스템인지, 왜 복잡한지]
 
-**Key observations:**
+**기본 시나리오:**
+[step-by-step 흐름. 각 단계에서 시스템이 무엇을 알아야 하는지 명시]
+[한 곳에 다 우겨넣으면 어떤 문제가 생기는지 끝에 언급]
 
-- found X pattern at line Y because...
-- this is good/bad because...
+**요구사항:**
 
-**Patterns identified:**
+1. **핵심 동작:** 구현해야 할 메서드 목록
+2. **정책은 외부에서 주입 가능:** 바뀔 수 있는 정책/전략/의존성 목록
+3. **테스트 관점:** 실제 인프라 없이 테스트 가능해야 하는 시나리오 2~3개
 
-- Composite — used here as...
+**예시 사용:**
+// 운영 환경
+Service = ConcreteService(dep1: Real...(), dep2: Real...(), ...)
 
-**Lessons learned:**
+// 테스트 환경
+testService = ConcreteService(dep1: Fake...(), dep2: Fake...(), ...)
 
-- the gotcha with X is...
-- good signal for Y pattern is...
+**안티패턴:**
+class BadService:
+def method(): # 의존성을 내부에서 직접 생성
+db = ConcreteDatabase(...)
+api = ConcreteAPI(...) # 정책 하드코딩
+...
 
-**Questions to follow up:**
+- 이걸 [Pattern Name]으로 어떻게 고쳐야 할까?
 
-- [ ] why does Z use this approach?
+---
+
+# Pseudo Code
+
+[사용자 작성]
+
+---
+
+# Review
+
+[Claude 작성]
+
+## 구조 정확성
+
+패턴의 핵심 구조(인터페이스, 역할 분리 등)가 올바르게 표현되었는가.
+
+## 패턴 의도 충족
+
+이 패턴이 해결하려는 문제(결합도, 확장성, 테스트 가능성 등)가 실제로 해소되었는가.
+
+## 개선점
+
+구체적인 수정 제안. 있을 경우만 작성.
+
+## knowledge/ 연결
+
+- [[knowledge/concepts/<pattern>]] — 이 풀이에서 확인된 핵심 개념
 ```
 
 ---
 
 ## Operations
 
-### Compile (daily/ → knowledge/)
+### Practice (pseudo/ 생성)
 
-When I say "compile today's log" or after a study session:
+When I say "[패턴명] 문제 내줘" or "[패턴명] 연습하고 싶어":
 
-1. Read the daily log
-2. Read `knowledge/index.md` to understand current state
-3. For each piece of knowledge in the log:
-   - If an existing concept covers it → **update** that article, add the daily log as a source
-   - If it is new → **create** a new article in the right directory
-   - If a non-obvious connection between 2+ patterns is revealed → **create** a connections/ article
-4. Update `knowledge/index.md`
+1. Read `knowledge/concepts/<pattern>.md` to understand what's been learned
+2. Check existing `pseudo/` files for that pattern — avoid repeating scenarios already practiced
+3. Generate a new real-world scenario problem following the Pseudo Code Practice Format above
+4. Create `pseudo/YYYY-MM-DD-<pattern>.md` with the 문제 section filled in, Pseudo Code and Review sections left blank
 5. Append to `knowledge/log.md`
 
-One daily log typically touches 3–8 knowledge articles.
+### Review (pseudo/ → knowledge/)
+
+When user has filled in the Pseudo Code section and says "리뷰해줘" or "review":
+
+1. Read the pseudo file
+2. Fill in the Review section (구조 정확성, 패턴 의도 충족, 개선점, knowledge/ 연결)
+3. Update `status` frontmatter to `reviewed`
+4. If the practice revealed a non-obvious insight → update the relevant `knowledge/concepts/` article
+5. If a new antipattern was identified → create `knowledge/antipatterns/<name>.md`
+6. Update `knowledge/index.md` Practices table
+7. Append to `knowledge/log.md`
 
 ---
 
@@ -321,6 +369,11 @@ _Last updated: YYYY-MM-DD_
 
 | Article | Summary |
 | ------- | ------- |
+
+## Practices
+
+| Article | Pattern | Status | Date |
+| ------- | ------- | ------ | ---- |
 ```
 
 ---
@@ -328,10 +381,16 @@ _Last updated: YYYY-MM-DD_
 ## `knowledge/log.md` Format
 
 ```markdown
-## [YYYY-MM-DDTHH:MM] compile | daily/YYYY-MM-DD.md
+## [YYYY-MM-DDTHH:MM] practice | pseudo/YYYY-MM-DD-<pattern>.md
 
-- Articles created: [[knowledge/concepts/composite]]
-- Articles updated: [[knowledge/concepts/observer]]
+- Problem created: [[pseudo/YYYY-MM-DD-<pattern>]]
+- Pattern: <pattern>
+
+## [YYYY-MM-DDTHH:MM] review | pseudo/YYYY-MM-DD-<pattern>.md
+
+- Review completed: [[pseudo/YYYY-MM-DD-<pattern>]]
+- Concepts updated: [[knowledge/concepts/<pattern>]]
+- Antipatterns created: (if any)
 
 ## [YYYY-MM-DDTHH:MM] review | repo-name
 
@@ -365,6 +424,7 @@ _Last updated: YYYY-MM-DD_
 ## Rules
 
 - Never modify anything in `raw/` — immutable source of truth
-- Never delete knowledge/ pages — mark superseded with `> **Superseded:** ...`
+- Never delete `knowledge/` pages — mark superseded with `> **Superseded:** ...`
+- Never delete `pseudo/` files — they are a practice record
 - Never leave a broken wikilink — create the target page in the same session
 - Always update `index.md` and `log.md` on every operation

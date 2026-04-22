@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "raw/references/designPattern-observer.md",
+                "file": "raw/references/designPattern-eventbus.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "designPattern-observer"
+              "title": "designPattern-eventbus"
             }
           }
         ]
@@ -183,15 +183,23 @@
   },
   "active": "e0368cc65eddc305",
   "lastOpenFiles": [
-    "knowledge/reviews/opencode-bus-ko.md",
     "knowledge/reviews/opencode-bus.md",
-    "knowledge/connections/observer-event-bus-ko.md",
-    "knowledge/log.md",
+    "knowledge/snippets/opencode/src-bus-index.annotated.ts",
+    "knowledge/snippets/opencode",
+    "knowledge/snippets",
+    "knowledge/reviews/opencode-bus-ko.md",
+    "knowledge/connections/event-bus.md",
+    "knowledge/connections/event-bus-ko.md",
     "knowledge/concepts/observer-ko.md",
-    "raw/references/designPattern-composite.md",
+    "knowledge/concepts/event-bus-ko.md",
+    "knowledge/connections/observer-event-bus-ko.md",
+    "knowledge/concepts/event-bus.md",
     "knowledge/connections/observer-event-bus.md",
-    "knowledge/connections/observer-event-bus-ko.md.tmp.13932.1776556662693",
+    "knowledge/concepts/observer.md",
     "raw/references/designPattern-observer.md",
+    "knowledge/log.md",
+    "raw/references/designPattern-composite.md",
+    "knowledge/connections/observer-event-bus-ko.md.tmp.13932.1776556662693",
     "CLAUDE.md",
     "raw/references/designPattern-decorator.md",
     "raw/references/designPattern-factory.md",
@@ -204,22 +212,13 @@
     "hooks",
     "wiki/reviews",
     "wiki/antipatterns",
-    "wiki/patterns",
     "wiki/log.md",
     "wiki/index.md",
-    "wiki",
     "raw/snippets/designPattern-composite.md",
-    "raw/snippets",
     "raw/references/designPattern-stratagy.md",
     "raw/references/designPattern-registry.md",
     "snippets/designPattern-composite.md",
     "references/snippets/designPattern-composite.md",
-    "references/designPattern-stratagy.md",
-    "references/designPattern-registry.md",
-    "references/designPattern-observer.md",
-    "references/designPattern-factory.md",
-    "references/designPattern-decorator.md",
-    "references/designPattern-composite.md",
     "Untitled 1.canvas"
   ]
 }
